@@ -456,7 +456,7 @@ function _painelResumo(aba, projetos) {
  
   aba.getRange(2, 1, 1, 4).merge()
     .setValue('Atualizado em: ' + hoje)
-    .setFontColor('#555555').setFontSize(9)
+    .setFontColor('#555555').setFontSize(12)  
     .setBackground(COR.CINZA_CLARO)
     .setHorizontalAlignment('center');
  
@@ -503,7 +503,7 @@ aba.setRowHeight(5, 6);
 function _dadosStatusProjetos(aba, projetos) {
   aba.getRange(7, 1, 1, 2).merge()
     .setValue('STATUS DOS PROGRAMAS')
-    .setFontWeight('bold').setFontSize(9)
+    .setFontWeight('bold').setFontSize(12)  
     .setFontColor(COR.TEXTO_CLARO)
     .setBackground(COR.SECUNDARIO)
     .setHorizontalAlignment('center');
@@ -512,7 +512,7 @@ function _dadosStatusProjetos(aba, projetos) {
   for (var h = 0; h < cabCols.length; h++) {
     aba.getRange(8, h + 1)
       .setValue(cabCols[h])
-      .setFontWeight('bold').setFontSize(9)
+      .setFontWeight('bold').setFontSize(12)
       .setFontColor(COR.TEXTO_ESCURO)
       .setBackground(COR.DESTAQUE)
       .setHorizontalAlignment('center');
@@ -535,7 +535,7 @@ function _dadosStatusProjetos(aba, projetos) {
   var linha = 9;
   for (var status in cont) {
     aba.getRange(linha, 1)
-      .setValue(status).setFontSize(9)
+      .setValue(status).setFontSize(12)
       .setFontColor(coresStatus[status] || COR.TEXTO_ESCURO)
       .setBackground(COR.BRANCO).setFontWeight('bold');
     aba.getRange(linha, 2)
@@ -549,7 +549,7 @@ function _dadosStatusProjetos(aba, projetos) {
 function _dadosProgressoProjetos(aba, projetos) {
   aba.getRange(14, 1, 1, 4).merge()
     .setValue('PROGRESSO POR PROGRAMA')
-    .setFontWeight('bold').setFontSize(9)
+    .setFontWeight('bold').setFontSize(12)
     .setFontColor(COR.TEXTO_CLARO)
     .setBackground(COR.SECUNDARIO)
     .setHorizontalAlignment('center');
@@ -558,7 +558,7 @@ function _dadosProgressoProjetos(aba, projetos) {
   for (var h = 0; h < cabCols.length; h++) {
     aba.getRange(15, h + 1)
       .setValue(cabCols[h])
-      .setFontWeight('bold').setFontSize(9)
+      .setFontWeight('bold').setFontSize(12)
       .setFontColor(COR.TEXTO_ESCURO)
       .setBackground(COR.DESTAQUE)
       .setHorizontalAlignment('center');
@@ -579,14 +579,14 @@ function _dadosProgressoProjetos(aba, projetos) {
     var pTempo  = Number(proj[P.PERC_TEMPO  - 1]) || 0;
     var pGeral  = Number(proj[P.PERC_GERAL  - 1]) || 0;
  
-    aba.getRange(linha, 1).setValue(nome).setFontSize(9).setBackground(COR.BRANCO);
-    aba.getRange(linha, 2).setValue(pEtapas).setFontSize(9)
+    aba.getRange(linha, 1).setValue(nome).setFontSize(12).setBackground(COR.BRANCO);
+    aba.getRange(linha, 2).setValue(pEtapas).setFontSize(12)
       .setHorizontalAlignment('center').setBackground(COR.BRANCO)
       .setNumberFormat('0"%"');
-    aba.getRange(linha, 3).setValue(pTempo).setFontSize(9)
+    aba.getRange(linha, 3).setValue(pTempo).setFontSize(12)
       .setHorizontalAlignment('center').setBackground(COR.BRANCO)
       .setNumberFormat('0"%"');
-    aba.getRange(linha, 4).setValue(pGeral).setFontSize(9)
+    aba.getRange(linha, 4).setValue(pGeral).setFontSize(12)
       .setHorizontalAlignment('center').setBackground(COR.BRANCO)
       .setNumberFormat('0"%"');
  
@@ -602,16 +602,16 @@ function _dadosEtapas(aba, etapas, linhaInicio) {
  
   aba.getRange(LINHA_ETAPAS - 1, 1, 1, 2).merge()
     .setValue('STATUS DAS ETAPAS')
-    .setFontWeight('bold').setFontSize(9)
+    .setFontWeight('bold').setFontSize(12)
     .setFontColor(COR.TEXTO_CLARO)
     .setBackground(COR.SECUNDARIO)
     .setHorizontalAlignment('center');
  
   aba.getRange(LINHA_ETAPAS, 1).setValue('Status da Etapa')
-    .setFontWeight('bold').setFontSize(9)
+    .setFontWeight('bold').setFontSize(12)
     .setBackground(COR.DESTAQUE).setFontColor(COR.TEXTO_ESCURO);
   aba.getRange(LINHA_ETAPAS, 2).setValue('Qtd')
-    .setFontWeight('bold').setFontSize(9)
+    .setFontWeight('bold').setFontSize(12)
     .setBackground(COR.DESTAQUE).setFontColor(COR.TEXTO_ESCURO)
     .setHorizontalAlignment('center');
   _bordaBranca(aba, LINHA_ETAPAS, 1, 1, 2);
@@ -653,7 +653,7 @@ function _dadosEtapas(aba, etapas, linhaInicio) {
   var linha = LINHA_ETAPAS + 1;
   for (var s in cont) {
   if (cont[s] === 0) continue; // NÃO mostra categorias vazias
-    aba.getRange(linha, 1).setValue(s).setFontSize(9)
+    aba.getRange(linha, 1).setValue(s).setFontSize(12)
       .setFontColor(coresEt[s] || COR.TEXTO_ESCURO)
       .setFontWeight('bold').setBackground(COR.BRANCO);
     aba.getRange(linha, 2).setValue(cont[s]).setFontSize(11)
