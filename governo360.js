@@ -466,11 +466,22 @@ function _painelResumo(aba, projetos) {
     
     for (var c = 0; c < cabsVisiveis.length; c++) {
       var col = c + 1;
-    
-      // FUNDO DO CARD (branco com borda leve)
-      var card = aba.getRange(3, col, 3, 1);
+    // FUNDO DO CARD (borda externa branca grossa)
+var card = aba.getRange(3, col, 3, 1);
 card.setBackground(COR.BRANCO)
     .setBorder(true, true, true, true, false, false, COR.BRANCO, SpreadsheetApp.BorderStyle.SOLID_THICK);
+
+// ---- BORDAS INTERNAS (#cccccc) ----
+
+// linha entre título e número
+aba.getRange(3, col)
+  .setBorder(false, false, true, false, false, false, '#cccccc', SpreadsheetApp.BorderStyle.SOLID);
+
+// linha entre número e barra
+aba.getRange(4, col)
+  .setBorder(false, false, true, false, false, false, '#cccccc', SpreadsheetApp.BorderStyle.SOLID);
+
+// ---- CONTEÚDO ----
 
 // TÍTULO
 aba.getRange(3, col)
@@ -478,25 +489,27 @@ aba.getRange(3, col)
   .setFontSize(12)
   .setFontWeight('bold')
   .setFontColor(COR.TEXTO_ESCURO)
-  .setHorizontalAlignment('center');
+  .setHorizontalAlignment('center')
+  .setVerticalAlignment('middle');
 
-// NÚMERO GRANDE
+// NÚMERO
 aba.getRange(4, col)
   .setValue(valsVisiveis[c])
   .setFontSize(22)
   .setFontWeight('bold')
   .setFontColor(coresLinha[c])
-  .setHorizontalAlignment('center');
-    
-      // LINHA DECORATIVA (barra inferior)
-      aba.getRange(5, col)
-        .setBackground(coresLinha[c]);
+  .setHorizontalAlignment('center')
+  .setVerticalAlignment('middle');
+
+// BARRA INFERIOR
+aba.getRange(5, col)
+  .setBackground(coresLinha[c]);
     }
  
   aba.getRange(6, 1, 1, 4).setBackground(COR.PRIMARIO);
   aba.setRowHeight(6, 4);
-  aba.setRowHeight(3, 22);
-aba.setRowHeight(4, 38);
+  aba.setRowHeight(3, 24);
+aba.setRowHeight(4, 42);
 aba.setRowHeight(5, 6);
 }
  
