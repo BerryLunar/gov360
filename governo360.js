@@ -469,24 +469,24 @@ function _painelResumo(aba, projetos) {
     
       // FUNDO DO CARD (branco com borda leve)
       var card = aba.getRange(3, col, 3, 1);
-      card.setBackground(COR.BRANCO)
-          .setBorder(true, true, true, true, false, false, COR.TERCIARIO, SpreadsheetApp.BorderStyle.SOLID);
-    
-      // TÍTULO
-      aba.getRange(3, col)
-        .setValue(cabsVisiveis[c])
-        .setFontSize(9)
-        .setFontWeight('bold')
-        .setFontColor(COR.TEXTO_ESCURO)
-        .setHorizontalAlignment('center');
-    
-      // NÚMERO GRANDE
-      aba.getRange(4, col)
-        .setValue(valsVisiveis[c])
-        .setFontSize(22)
-        .setFontWeight('bold')
-        .setFontColor(coresLinha[c])
-        .setHorizontalAlignment('center');
+card.setBackground(COR.BRANCO)
+    .setBorder(true, true, true, true, false, false, COR.BRANCO, SpreadsheetApp.BorderStyle.SOLID_THICK);
+
+// TÍTULO
+aba.getRange(3, col)
+  .setValue(cabsVisiveis[c])
+  .setFontSize(12)
+  .setFontWeight('bold')
+  .setFontColor(COR.TEXTO_ESCURO)
+  .setHorizontalAlignment('center');
+
+// NÚMERO GRANDE
+aba.getRange(4, col)
+  .setValue(valsVisiveis[c])
+  .setFontSize(22)
+  .setFontWeight('bold')
+  .setFontColor(coresLinha[c])
+  .setHorizontalAlignment('center');
     
       // LINHA DECORATIVA (barra inferior)
       aba.getRange(5, col)
@@ -684,6 +684,8 @@ function _graficoStatus(aba) {
       .setChartType(Charts.ChartType.COLUMN)
       .addRange(rangeStatus)
       .setPosition(1, 6, 0, 0)
+      .setOption('backgroundColor', '#ffffff')
+      .setOption('chartArea', { backgroundColor: '#ffffff' })
       .setOption('title', 'Status dos Programas')
       .setOption('legend', { position: 'none' })
       .setOption('vAxis', { minValue: 0 })
@@ -720,6 +722,8 @@ function _graficoProgresso(aba, projetos) {
       .addRange(rangeProgramas)
       .addRange(rangePercGeral)
       .setPosition(1, 9, 0, 0)
+      .setOption('backgroundColor', '#ffffff')
+      .setOption('chartArea', { backgroundColor: '#ffffff' })
       .setOption('title', 'Progresso por Programa (%)')
       .setOption('legend', { position: 'none' }) // remove legenda confusa
       .setOption('hAxis', { minValue: 0, maxValue: 100 })
@@ -748,16 +752,20 @@ function _graficoEtapas(aba, linhaEtapas) {
     aba.newChart()
       .setChartType(Charts.ChartType.COLUMN)
       .addRange(rangeEtapas)
-      .setPosition(14, 6, 0, 0)
+      .setPosition(15, 6, 0, 0) // já ajustado pra nova posição
+      .setOption('backgroundColor', '#ffffff')
+      .setOption('chartArea', { backgroundColor: '#ffffff' })
       .setOption('title', 'Status das Etapas')
       .setOption('legend', { position: 'none' })
       .setOption('vAxis', { minValue: 0 })
+      .setOption('colors', ['#c39bd3']) // cor que você pediu
+      .setOption('backgroundColor', '#ffffff')
+      .setOption('chartArea', { backgroundColor: '#ffffff' })
       .setOption('width', 420)
       .setOption('height', 260)
       .build()
   );
 }
- 
 // ================================================
 // HELPER: bordas brancas
 // ================================================
