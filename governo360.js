@@ -646,7 +646,7 @@ function _dadosEtapas(aba, etapas, linhaInicio) {
     'Concluído':    COR.VERDE,
     'Em andamento': COR.AZUL,
     'Vencida':      COR.VERMELHO,
-    'Não iniciada': COR.CINZA_CLARO
+    'Não iniciada': COR.TEXTO_ESCURO
   };
  
   var linha = LINHA_ETAPAS + 1;
@@ -700,9 +700,10 @@ function _graficoProgresso(aba, projetos) {
   }
   if (total === 0) return;
 
-  // SOMENTE Programa + % Geral
-  var rangeGrafico = aba.getRange(16, 1, total, 1)
-    .offset(0, 3, total, 2); // pega coluna A (nome) + coluna D (% Geral)
+  // Usa faixa explícita para evitar offsets frágeis:
+  // Coluna A = Programa (rótulo), Coluna D = % Geral (valor)
+  var rangeProgramas = aba.getRange(16, 1, total, 1);
+  var rangePercGeral = aba.getRange(16, 4, total, 1);
 
   // Remove gráficos antigos
   aba.getCharts().forEach(function(chart) {
@@ -715,7 +716,8 @@ function _graficoProgresso(aba, projetos) {
   aba.insertChart(
     aba.newChart()
       .setChartType(Charts.ChartType.BAR)
-      .addRange(rangeGrafico)
+      .addRange(rangeProgramas)
+      .addRange(rangePercGeral)
       .setPosition(1, 9, 0, 0)
       .setOption('title', 'Progresso por Programa (%)')
       .setOption('legend', { position: 'none' }) // remove legenda confusa
