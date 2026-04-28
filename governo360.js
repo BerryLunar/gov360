@@ -447,8 +447,8 @@ function _painelResumo(aba, projetos) {
     .setFontSize(15).setFontWeight('bold')
     .setFontColor(COR.TEXTO_CLARO)
     .setBackground(COR.PRIMARIO)
-.setFontSize(16)
-.setLetterSpacing(1)
+    .setFontSize(16)
+    .setFontWeight('bold')
     .setHorizontalAlignment('center')
     .setVerticalAlignment('middle');
   aba.setRowHeight(1, 36);
