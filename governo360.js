@@ -667,14 +667,12 @@ function _dadosEtapas(aba, etapas, linhaInicio) {
 }
  
 function _graficoStatus(aba) {
-  // Descobre automaticamente até onde vai a tabela
-  var ultimaLinha = aba.getLastRow();
-  var rangeStatus = aba.getRange(8, 1, ultimaLinha - 7, 2);
+  var rangeStatus = aba.getRange(8, 1, 5, 2); // A8:B12 fixo
 
-  // Remove gráficos antigos dessa área
+  // Remove gráficos antigos
   aba.getCharts().forEach(function(chart) {
     var pos = chart.getContainerInfo();
-    if (pos.getAnchorColumn() === 6) {
+    if (pos.getAnchorColumn() === 6 && pos.getAnchorRow() <= 13) {
       aba.removeChart(chart);
     }
   });
@@ -684,18 +682,18 @@ function _graficoStatus(aba) {
       .setChartType(Charts.ChartType.COLUMN)
       .addRange(rangeStatus)
       .setPosition(1, 6, 0, 0)
-      .setOption('backgroundColor', '#ffffff')
-      .setOption('chartArea', { backgroundColor: '#ffffff' })
       .setOption('title', 'Status dos Programas')
       .setOption('legend', { position: 'none' })
       .setOption('vAxis', { minValue: 0 })
+      .setOption('colors', [COR.AZUL])
+      .setOption('backgroundColor', '#ffffff')
+      .setOption('chartArea', { backgroundColor: '#ffffff' })
       .setOption('width', 420)
-      .setOption('height', 260)
-      .setOption('colors', [COR.AZUL]) // UMA COR só (mais limpo)
+      .setOption('height', 300) // aumentei
       .build()
   );
 }
- 
+
 function _graficoProgresso(aba, projetos) {
   var total = 0;
   for (var i = 1; i < projetos.length; i++) {
