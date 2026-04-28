@@ -76,7 +76,8 @@ var COR = {
   AZUL:        '#5DADE2',
   CINZA_CLARO: '#F4F6F7',
   BRANCO:      '#FFFFFF',
-  TEXTO_ESCURO:'#2C3E50'
+  TEXTO_ESCURO:'#2C3E50',
+  TEXTO_CLARO: '#ffffff'
 };
  
 // ================================================
