@@ -359,7 +359,7 @@ function atualizarProjetos() {
       status = 'Encerrado';
     } else if (temAtrasada) {
       status = 'Atrasado';
-    } else if (percTempo > 0 || concluidas > 0) {
+    } else if (percTempo > 0 || concluidas > 0 || percEtapas > 0) {
       status = 'Em Execução';
     } else {
       status = 'Planejamento';
