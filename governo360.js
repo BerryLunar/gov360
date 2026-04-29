@@ -417,10 +417,18 @@ function atualizarDashboard() {
   }
  
   _painelResumo(abaDash, projetos);
-  _dadosAgenda(abaDash);
+
+  // 🔥 pega os dados da agenda corretamente
+  var agenda = ss.getSheetByName(ABA_AGENDA).getDataRange().getValues();
+  
+  // 🔥 passa os dados pra função
+  _dadosAgenda(abaDash, agenda);
+  
   var proximaLinha = _dadosProgressoProjetos(abaDash, projetos);
   var linhaEtapas  = _dadosEtapas(abaDash, etapas, proximaLinha);
- 
+  var abaAgenda = ss.getSheetByName(ABA_AGENDA);
+  var agenda = abaAgenda ? abaAgenda.getDataRange().getValues() : [];
+  
   _graficoStatus(abaDash);
   _graficoProgresso(abaDash, projetos);
   _graficoEtapas(abaDash, linhaEtapas);
@@ -429,79 +437,54 @@ function atualizarDashboard() {
 // ================================================
 // CARD AGENDA (última atualização por programa)
 // ================================================
-function _dadosAgenda(aba) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var abaAgenda = ss.getSheetByName(ABA_AGENDA);
-  if (!abaAgenda) return;
+// ================================================
+// AGENDA — Lançamentos do 360 (CORRIGIDO)
+// ================================================
+function _dadosAgenda(aba, agenda) {
 
-  var dados = abaAgenda.getDataRange().getValues();
-
-  var mapa = {};
-
-  // AGRUPA POR PROGRAMA → pega última data
-  for (var i = 1; i < dados.length; i++) {
-    var programa = dados[i][A.PROGRAMA - 1];
-    var data     = dados[i][A.DATA_LANCAMENTO - 1];
-
-    if (!programa || !(data instanceof Date)) continue;
-
-    if (!mapa[programa] || data > mapa[programa]) {
-      mapa[programa] = data;
-    }
-  }
-
-  // TRANSFORMA EM ARRAY
-  var linhas = [];
-  for (var prog in mapa) {
-    linhas.push([prog, mapa[prog]]);
-  }
-
-  // ORDENA POR MAIS RECENTE
-  linhas.sort(function(a, b) {
-    return b[1] - a[1];
-  });
-
-  // LIMITE VISUAL (top 5)
-  linhas = linhas.slice(0, 5);
-
-  // CABEÇALHO
-  aba.getRange(7, 1, 1, 2).merge()
-    .setValue('AGENDA — ÚLTIMAS ATUALIZAÇÕES')
-    .setFontWeight('bold')
-    .setFontSize(12)
-    .setFontColor(COR.TEXTO_CLARO)
+  aba.getRange(7, 1, 1, 4).merge()
+    .setValue('AGENDA — LANÇAMENTOS 360')
     .setBackground(COR.SECUNDARIO)
+    .setFontColor('#ffffff')
+    .setFontWeight('bold')
     .setHorizontalAlignment('center');
 
-  aba.getRange(8, 1).setValue('Programa')
-    .setFontWeight('bold')
-    .setBackground(COR.DESTAQUE);
-
-  aba.getRange(8, 2).setValue('Última Atualização')
-    .setFontWeight('bold')
+  var cab = ['Programa', 'Última Atualização', 'Data Atividade', 'Lançamento'];
+  aba.getRange(8, 1, 1, 4)
+    .setValues([cab])
     .setBackground(COR.DESTAQUE)
+    .setFontWeight('bold')
     .setHorizontalAlignment('center');
 
-  // DADOS
-  if (linhas.length > 0) {
-    aba.getRange(9, 1, linhas.length, 2).setValues(linhas);
-    aba.getRange(9, 2, linhas.length, 1)
-      .setNumberFormat('dd/MM/yyyy');
+  var linha = 9;
+
+  for (var i = 1; i < agenda.length && linha <= 12; i++) {
+
+    var prog = agenda[i][A.PROGRAMA - 1];
+    var atualizacao = agenda[i][A.ATUALIZACAO - 1];
+    var atividade = agenda[i][A.DATA_ATIVIDADE - 1];
+    var lancamento = agenda[i][A.DATA_LANCAMENTO - 1];
+
+    aba.getRange(linha, 1, 1, 4).setValues([[
+      prog,
+      atualizacao,
+      atividade,
+      lancamento
+    ]]);
+
+    // fundo branco
+    aba.getRange(linha, 1, 1, 4).setBackground('#ffffff');
+
+    // 🔥 LINHAS INTERNAS (APENAS HORIZONTAIS)
+    aba.getRange(linha, 1, 1, 4)
+      .setBorder(true, null, true, null, false, false, '#e0e0e0', SpreadsheetApp.BorderStyle.SOLID);
+
+    linha++;
   }
 
-  // FUNDO BRANCO
-  aba.getRange(7, 1, linhas.length + 2, 2)
-    .setBackground(COR.BRANCO);
-
-  // LINHAS HORIZONTAIS (igual seu padrão visual)
-  for (var i = 8; i < 9 + linhas.length; i++) {
-    aba.getRange(i, 1, 1, 2)
-      .setBorder(null, null, true, null, null, null, '#e0e0e0', SpreadsheetApp.BorderStyle.SOLID);
-  }
-
-  // BORDA EXTERNA BRANCA
-  aba.getRange(7, 1, linhas.length + 2, 2)
-    .setBorder(true, true, true, true, false, false, COR.BRANCO, SpreadsheetApp.BorderStyle.SOLID_THICK);
+  // 🔥 BORDA EXTERNA BRANCA GROSSA
+  aba.getRange(7, 1, 6, 4)
+    .setBorder(true, true, true, true, false, false, '#ffffff', SpreadsheetApp.BorderStyle.SOLID_THICK);
 }
 
 function _painelResumo(aba, projetos) {
@@ -760,79 +743,61 @@ function _dadosEtapas(aba, etapas, linhaInicio) {
   return LINHA_ETAPAS;
 }
  
+// ================================================
+// GRÁFICO STATUS (USA RESUMO DO TOPO - A4:D4)
+// ================================================
 function _graficoStatus(aba) {
 
-  var range = aba.getRange('A3 :D4'); // 🔥 agora fixo nos cards do topo
+  var range = aba.getRange('A3:D4'); // cabeçalho + valores reais
+
+  // remove antigos
+  aba.getCharts().forEach(function(chart) {
+    var pos = chart.getContainerInfo();
+    if (pos.getAnchorColumn() >= 6 && pos.getAnchorColumn() <= 8) {
+      aba.removeChart(chart);
+    }
+  });
 
   aba.insertChart(
     aba.newChart()
       .setChartType(Charts.ChartType.COLUMN)
       .addRange(range)
-      .setPosition(3, 6, 0, 0)
-      .setOption('width', 380)
-      .setOption('height', 260)
-
+      .setPosition(3, 6, 0, 0) // F3
       .setOption('title', 'Status dos Programas')
-      .setOption('titleTextStyle', {
-        color: COR.PRIMARIO,
-        fontSize: 14,
-        bold: true
-      })
-
       .setOption('legend', { position: 'none' })
-
-      // GRID INTERNO (como no print)
-      .setOption('hAxis', {
-        gridlines: { color: '#e0e0e0' },
-        textPosition: 'out'
-      })
-
-      .setOption('vAxis', {
-        gridlines: { color: '#e0e0e0' },
-        minValue: 0
-      })
-
-      // FUNDO BRANCO
+      .setOption('colors', [COR.AZUL])
       .setOption('backgroundColor', '#ffffff')
       .setOption('chartArea', {
         backgroundColor: '#ffffff',
         left: 60,
-        top: 50,
+        top: 40,
         width: '80%',
         height: '70%'
       })
-
-      // BORDA BRANCA (simula card)
-      .setOption('width', 420)
-      .setOption('height', 280)
-      .setOption('chartArea', {
-        left: 70,
-        top: 50,
-        width: '75%',
-        height: '70%',
-        backgroundColor: '#ffffff'
+      .setOption('hAxis', {
+        textPosition: 'out'
       })
-      .setOption('legend', { position: 'none' })
-.setOption('hAxis', {
-  textStyle: { fontSize: 11 }
-})
+      .setOption('vAxis', {
+        minValue: 0,
+        gridlines: { color: '#e0e0e0' }
+      })
+      .setOption('width', 360)
+      .setOption('height', 260)
       .build()
   );
 }
 
 function _graficoProgresso(aba, projetos) {
+
   var total = 0;
   for (var i = 1; i < projetos.length; i++) {
     if (projetos[i][P.ID - 1]) total++;
   }
   if (total === 0) return;
 
-  // Usa faixa explícita para evitar offsets frágeis:
-  // Coluna A = Programa (rótulo), Coluna D = % Geral (valor)
-  var rangeProgramas = aba.getRange(16, 1, total, 1);
-  var rangePercGeral = aba.getRange(16, 4, total, 1);
+  var nomes = aba.getRange(16, 1, total, 1);
+  var valores = aba.getRange(16, 4, total, 1);
 
-  // Remove gráficos antigos
   aba.getCharts().forEach(function(chart) {
     var pos = chart.getContainerInfo();
     if (pos.getAnchorColumn() >= 9) {
@@ -843,52 +808,38 @@ function _graficoProgresso(aba, projetos) {
   aba.insertChart(
     aba.newChart()
       .setChartType(Charts.ChartType.BAR)
-      .addRange(rangeProgramas)
-      .addRange(rangePercGeral)
-      .setPosition(3, 9, 0, 0)
-      .setOption('width', 620)
-      .setOption('height', 320)
-      .setOption('backgroundColor', { fill: '#ffffff' })
-      .setOption('chartArea', {
-        backgroundColor: '#ffffff'
-})
-.setOption('borderColor', '#ffffff')
+      .addRange(nomes)
+      .addRange(valores)
+      .setPosition(3, 9, 0, 0) // I3
       .setOption('title', 'Progresso por Programa (%)')
-      .setOption('legend', { position: 'none' }) // remove legenda confusa
-      .setOption('hAxis', { minValue: 0, maxValue: 100 })
-      .setOption('colors', [COR.PRIMARIO]) // UMA cor só
-      .setOption('width', 520)
-      .setOption('height', 320)
-      .setOption('hAxis', {
-        gridlines: { color: '#e0e0e0' },
-        minValue: 0,
-        maxValue: 100
+      .setOption('legend', { position: 'none' })
+      .setOption('colors', [COR.PRIMARIO])
+      .setOption('backgroundColor', '#ffffff')
+      .setOption('chartArea', {
+        backgroundColor: '#ffffff',
+        left: 120,
+        top: 40,
+        width: '75%',
+        height: '75%'
       })
-      
-      .setOption('vAxis', {
+      .setOption('hAxis', {
+        minValue: 0,
+        maxValue: 100,
         gridlines: { color: '#e0e0e0' }
       })
-      .setOption('chartArea', {
-        left: 70,
-        top: 50,
-        width: '75%',
-        height: '70%',
-        backgroundColor: '#ffffff'
-      })
+      .setOption('width', 620)
+      .setOption('height', 420)
       .build()
   );
 }
  
 function _graficoEtapas(aba, linhaEtapas) {
-  // Cabeçalho está em linhaEtapas
-  // Dados reais começam na linha seguinte
-  var rangeEtapas = aba.getRange(linhaEtapas + 1, 1, 4, 2);
 
-  // Remove gráficos antigos dessa área (evita duplicação bugada)
-  var charts = aba.getCharts();
-  charts.forEach(function(chart) {
+  var range = aba.getRange(linhaEtapas + 1, 1, 4, 2);
+
+  aba.getCharts().forEach(function(chart) {
     var pos = chart.getContainerInfo();
-    if (pos.getAnchorColumn() === 6 && pos.getAnchorRow() >= 14) {
+    if (pos.getAnchorColumn() >= 6 && pos.getAnchorRow() >= 16) {
       aba.removeChart(chart);
     }
   });
@@ -896,40 +847,29 @@ function _graficoEtapas(aba, linhaEtapas) {
   aba.insertChart(
     aba.newChart()
       .setChartType(Charts.ChartType.COLUMN)
-      .addRange(rangeEtapas)
-      .setPosition(17, 6, 0, 0) // já ajustado pra nova posição
-      .setOption('width', 380)
-      .setOption('height', 220)
-      .setOption('chartArea', { backgroundColor: '#ffffff' })
+      .addRange(range)
+      .setPosition(16, 6, 0, 0) // F16
       .setOption('title', 'Status das Etapas')
       .setOption('legend', { position: 'none' })
-      .setOption('vAxis', { minValue: 0 })
-      .setOption('colors', ['#c39bd3']) // cor que você pediu
-     .setOption('backgroundColor', { fill: '#ffffff' })
+      .setOption('colors', [COR.TERCIARIO])
+      .setOption('backgroundColor', '#ffffff')
       .setOption('chartArea', {
-        backgroundColor: '#ffffff'
-})
-.setOption('borderColor', '#ffffff')
-      .setOption('width', 420)
-      .setOption('height', 260)
-      .setOption('hAxis', {
-        gridlines: { color: '#e0e0e0' }
+        backgroundColor: '#ffffff',
+        left: 60,
+        top: 40,
+        width: '80%',
+        height: '70%'
       })
       .setOption('vAxis', {
-        gridlines: { color: '#e0e0e0' },
-        minValue: 0
+        minValue: 0,
+        gridlines: { color: '#e0e0e0' }
       })
-
-      .setOption('chartArea', {
-        left: 70,
-        top: 50,
-        width: '75%',
-        height: '70%',
-        backgroundColor: '#ffffff'
-      })
+      .setOption('width', 360)
+      .setOption('height', 260)
       .build()
   );
 }
+
 // ================================================
 // HELPER: bordas brancas
 // ================================================
