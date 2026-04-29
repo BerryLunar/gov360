@@ -68,6 +68,7 @@ var A = {
 var COR = {
   PRIMARIO:    '#5B2C8D', // roxo institucional
   SECUNDARIO:  '#8E44AD', // lilás forte
+  DESTAQUE:    '#D7BDE2', // fundo de cabeçalhos secundários
   TERCIARIO:   '#C39BD3', // lilás suave
   ROSA:        '#E8A6B8', // rosa institucional
   VERDE:       '#2ECC71',
@@ -682,15 +683,8 @@ function _dadosEtapas(aba, etapas, linhaInicio) {
 }
  
 function _graficoStatus(aba) {
-  var dados = aba.getRange(9, 1, aba.getLastRow() - 8, 2).getValues()
-  .filter(function(linha) {
-    return linha[0] && linha[1];
-  });
-
-var tempRange = aba.getRange(9, 4, dados.length, 2);
-tempRange.setValues(dados);
-
-var rangeStatus = tempRange;
+  // Seção fixa de status: cabeçalho (linha 8) + 4 categorias (linhas 9-12)
+  var rangeStatus = aba.getRange(8, 1, 5, 2);
 
   // Remove gráficos antigos
   aba.getCharts().forEach(function(chart) {
