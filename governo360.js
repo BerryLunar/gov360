@@ -194,8 +194,10 @@ function _recalcularLinhaProjeto(sheetProjetos, linhaSheet) {
   } else if (temAtrasada) {
     status = 'Atrasado';
   } else if (percTempo > 0 || concluidas > 0 || percEtapas > 0) {
-  status = 'Em Execução';
-}
+    status = 'Em Execução';
+  } else {
+    status = 'Planejamento';
+  }
  
   // --- ESCREVE APENAS as colunas de output (K, L, M, N, O) ---
   sheetProjetos.getRange(linhaSheet, P.STATUS)            .setValue(status);
@@ -722,11 +724,10 @@ function _dadosEtapas(aba, etapas, proximaLinhaProgresso) {
 
  
 // ================================================
-// GRÁFICO: STATUS (cards do painel de resumo — linhas 3–4, colunas 1–4)
-// Sempre fixo no painel de resumo
+// GRÁFICO: STATUS (tabela de status: linhas 8-12, colunas A-B)
 // ================================================
 function _graficoStatus(aba) {
-  var rangeStatus = aba.getRange(3, 1, 2, 4);
+  var rangeStatus = aba.getRange(8, 1, 5, 2);
 
   aba.getCharts().forEach(function(chart) {
     var pos = chart.getContainerInfo();
