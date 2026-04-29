@@ -466,20 +466,22 @@ function _painelResumo(aba, projetos) {
     
     for (var c = 0; c < cabsVisiveis.length; c++) {
       var col = c + 1;
-    // FUNDO DO CARD (borda externa branca grossa)
+    // FUNDO DO CARD
 var card = aba.getRange(3, col, 3, 1);
-card.setBackground(COR.BRANCO)
-    .setBorder(true, true, true, true, false, false, COR.BRANCO, SpreadsheetApp.BorderStyle.SOLID_THICK);
+card.setBackground(COR.BRANCO);
 
 // ---- BORDAS INTERNAS (#cccccc) ----
 
 // linha entre título e número
 aba.getRange(3, col)
-  .setBorder(false, false, true, false, false, false, '#cccccc', SpreadsheetApp.BorderStyle.SOLID);
+  .setBorder(null, null, true, null, null, null, '#e0e0e0', SpreadsheetApp.BorderStyle.SOLID);
 
 // linha entre número e barra
 aba.getRange(4, col)
-  .setBorder(false, false, true, false, false, false, '#cccccc', SpreadsheetApp.BorderStyle.SOLID);
+  .setBorder(null, null, true, null, null, null, '#e0e0e0', SpreadsheetApp.BorderStyle.SOLID);
+
+// ---- BORDA EXTERNA (APLICAR POR ÚLTIMO!) ----
+card.setBorder(true, true, true, true, false, false, COR.BRANCO, SpreadsheetApp.BorderStyle.SOLID_THICK);
 
 // ---- CONTEÚDO ----
 
@@ -680,7 +682,15 @@ function _dadosEtapas(aba, etapas, linhaInicio) {
 }
  
 function _graficoStatus(aba) {
-  var rangeStatus = aba.getRange(8, 1, 5, 2); // A8:B12 fixo
+  var dados = aba.getRange(9, 1, aba.getLastRow() - 8, 2).getValues()
+  .filter(function(linha) {
+    return linha[0] && linha[1];
+  });
+
+var tempRange = aba.getRange(9, 4, dados.length, 2);
+tempRange.setValues(dados);
+
+var rangeStatus = tempRange;
 
   // Remove gráficos antigos
   aba.getCharts().forEach(function(chart) {
@@ -699,8 +709,11 @@ function _graficoStatus(aba) {
       .setOption('legend', { position: 'none' })
       .setOption('vAxis', { minValue: 0 })
       .setOption('colors', [COR.AZUL])
-      .setOption('backgroundColor', '#ffffff')
-      .setOption('chartArea', { backgroundColor: '#ffffff' })
+      .setOption('backgroundColor', { fill: '#ffffff' })
+      .setOption('chartArea', {
+        backgroundColor: '#ffffff'
+})
+.setOption('borderColor', '#ffffff')
       .setOption('width', 420)
       .setOption('height', 300) // aumentei
       .build()
@@ -733,8 +746,11 @@ function _graficoProgresso(aba, projetos) {
       .addRange(rangeProgramas)
       .addRange(rangePercGeral)
       .setPosition(1, 9, 0, 0)
-      .setOption('backgroundColor', '#ffffff')
-      .setOption('chartArea', { backgroundColor: '#ffffff' })
+      .setOption('backgroundColor', { fill: '#ffffff' })
+      .setOption('chartArea', {
+        backgroundColor: '#ffffff'
+})
+.setOption('borderColor', '#ffffff')
       .setOption('title', 'Progresso por Programa (%)')
       .setOption('legend', { position: 'none' }) // remove legenda confusa
       .setOption('hAxis', { minValue: 0, maxValue: 100 })
@@ -764,14 +780,16 @@ function _graficoEtapas(aba, linhaEtapas) {
       .setChartType(Charts.ChartType.COLUMN)
       .addRange(rangeEtapas)
       .setPosition(15, 6, 0, 0) // já ajustado pra nova posição
-      .setOption('backgroundColor', '#ffffff')
       .setOption('chartArea', { backgroundColor: '#ffffff' })
       .setOption('title', 'Status das Etapas')
       .setOption('legend', { position: 'none' })
       .setOption('vAxis', { minValue: 0 })
       .setOption('colors', ['#c39bd3']) // cor que você pediu
-      .setOption('backgroundColor', '#ffffff')
-      .setOption('chartArea', { backgroundColor: '#ffffff' })
+     .setOption('backgroundColor', { fill: '#ffffff' })
+      .setOption('chartArea', {
+        backgroundColor: '#ffffff'
+})
+.setOption('borderColor', '#ffffff')
       .setOption('width', 420)
       .setOption('height', 260)
       .build()
