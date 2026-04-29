@@ -417,7 +417,7 @@ function atualizarDashboard() {
   }
  
   _painelResumo(abaDash, projetos);
-  _dadosStatusProjetos(abaDash, projetos);
+  _dadosAgenda(abaDash);
   var proximaLinha = _dadosProgressoProjetos(abaDash, projetos);
   var linhaEtapas  = _dadosEtapas(abaDash, etapas, proximaLinha);
  
@@ -426,6 +426,84 @@ function atualizarDashboard() {
   _graficoEtapas(abaDash, linhaEtapas);
 }
  
+// ================================================
+// CARD AGENDA (última atualização por programa)
+// ================================================
+function _dadosAgenda(aba) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var abaAgenda = ss.getSheetByName(ABA_AGENDA);
+  if (!abaAgenda) return;
+
+  var dados = abaAgenda.getDataRange().getValues();
+
+  var mapa = {};
+
+  // AGRUPA POR PROGRAMA → pega última data
+  for (var i = 1; i < dados.length; i++) {
+    var programa = dados[i][A.PROGRAMA - 1];
+    var data     = dados[i][A.DATA_LANCAMENTO - 1];
+
+    if (!programa || !(data instanceof Date)) continue;
+
+    if (!mapa[programa] || data > mapa[programa]) {
+      mapa[programa] = data;
+    }
+  }
+
+  // TRANSFORMA EM ARRAY
+  var linhas = [];
+  for (var prog in mapa) {
+    linhas.push([prog, mapa[prog]]);
+  }
+
+  // ORDENA POR MAIS RECENTE
+  linhas.sort(function(a, b) {
+    return b[1] - a[1];
+  });
+
+  // LIMITE VISUAL (top 5)
+  linhas = linhas.slice(0, 5);
+
+  // CABEÇALHO
+  aba.getRange(7, 1, 1, 2).merge()
+    .setValue('AGENDA — ÚLTIMAS ATUALIZAÇÕES')
+    .setFontWeight('bold')
+    .setFontSize(12)
+    .setFontColor(COR.TEXTO_CLARO)
+    .setBackground(COR.SECUNDARIO)
+    .setHorizontalAlignment('center');
+
+  aba.getRange(8, 1).setValue('Programa')
+    .setFontWeight('bold')
+    .setBackground(COR.DESTAQUE);
+
+  aba.getRange(8, 2).setValue('Última Atualização')
+    .setFontWeight('bold')
+    .setBackground(COR.DESTAQUE)
+    .setHorizontalAlignment('center');
+
+  // DADOS
+  if (linhas.length > 0) {
+    aba.getRange(9, 1, linhas.length, 2).setValues(linhas);
+    aba.getRange(9, 2, linhas.length, 1)
+      .setNumberFormat('dd/MM/yyyy');
+  }
+
+  // FUNDO BRANCO
+  aba.getRange(7, 1, linhas.length + 2, 2)
+    .setBackground(COR.BRANCO);
+
+  // LINHAS HORIZONTAIS (igual seu padrão visual)
+  for (var i = 8; i < 9 + linhas.length; i++) {
+    aba.getRange(i, 1, 1, 2)
+      .setBorder(null, null, true, null, null, null, '#e0e0e0', SpreadsheetApp.BorderStyle.SOLID);
+  }
+
+  // BORDA EXTERNA BRANCA
+  aba.getRange(7, 1, linhas.length + 2, 2)
+    .setBorder(true, true, true, true, false, false, COR.BRANCO, SpreadsheetApp.BorderStyle.SOLID_THICK);
+}
+
 function _painelResumo(aba, projetos) {
   var hoje = Utilities.formatDate(
     new Date(), Session.getScriptTimeZone(), 'dd/MM/yyyy HH:mm'
@@ -683,33 +761,61 @@ function _dadosEtapas(aba, etapas, linhaInicio) {
 }
  
 function _graficoStatus(aba) {
-  // Seção fixa de status: cabeçalho (linha 8) + 4 categorias (linhas 9-12)
-  var rangeStatus = aba.getRange(8, 1, 5, 2);
 
-  // Remove gráficos antigos
-  aba.getCharts().forEach(function(chart) {
-    var pos = chart.getContainerInfo();
-    if (pos.getAnchorColumn() === 6 && pos.getAnchorRow() <= 13) {
-      aba.removeChart(chart);
-    }
-  });
+  var range = aba.getRange('A3 :D4'); // 🔥 agora fixo nos cards do topo
 
   aba.insertChart(
     aba.newChart()
       .setChartType(Charts.ChartType.COLUMN)
-      .addRange(rangeStatus)
-      .setPosition(1, 6, 0, 0)
+      .addRange(range)
+      .setPosition(3, 6, 0, 0)
+      .setOption('width', 380)
+      .setOption('height', 260)
+
       .setOption('title', 'Status dos Programas')
+      .setOption('titleTextStyle', {
+        color: COR.PRIMARIO,
+        fontSize: 14,
+        bold: true
+      })
+
       .setOption('legend', { position: 'none' })
-      .setOption('vAxis', { minValue: 0 })
-      .setOption('colors', [COR.AZUL])
-      .setOption('backgroundColor', { fill: '#ffffff' })
+
+      // GRID INTERNO (como no print)
+      .setOption('hAxis', {
+        gridlines: { color: '#e0e0e0' },
+        textPosition: 'out'
+      })
+
+      .setOption('vAxis', {
+        gridlines: { color: '#e0e0e0' },
+        minValue: 0
+      })
+
+      // FUNDO BRANCO
+      .setOption('backgroundColor', '#ffffff')
       .setOption('chartArea', {
-        backgroundColor: '#ffffff'
-})
-.setOption('borderColor', '#ffffff')
+        backgroundColor: '#ffffff',
+        left: 60,
+        top: 50,
+        width: '80%',
+        height: '70%'
+      })
+
+      // BORDA BRANCA (simula card)
       .setOption('width', 420)
-      .setOption('height', 300) // aumentei
+      .setOption('height', 280)
+      .setOption('chartArea', {
+        left: 70,
+        top: 50,
+        width: '75%',
+        height: '70%',
+        backgroundColor: '#ffffff'
+      })
+      .setOption('legend', { position: 'none' })
+.setOption('hAxis', {
+  textStyle: { fontSize: 11 }
+})
       .build()
   );
 }
@@ -739,7 +845,9 @@ function _graficoProgresso(aba, projetos) {
       .setChartType(Charts.ChartType.BAR)
       .addRange(rangeProgramas)
       .addRange(rangePercGeral)
-      .setPosition(1, 9, 0, 0)
+      .setPosition(3, 9, 0, 0)
+      .setOption('width', 620)
+      .setOption('height', 320)
       .setOption('backgroundColor', { fill: '#ffffff' })
       .setOption('chartArea', {
         backgroundColor: '#ffffff'
@@ -751,6 +859,22 @@ function _graficoProgresso(aba, projetos) {
       .setOption('colors', [COR.PRIMARIO]) // UMA cor só
       .setOption('width', 520)
       .setOption('height', 320)
+      .setOption('hAxis', {
+        gridlines: { color: '#e0e0e0' },
+        minValue: 0,
+        maxValue: 100
+      })
+      
+      .setOption('vAxis', {
+        gridlines: { color: '#e0e0e0' }
+      })
+      .setOption('chartArea', {
+        left: 70,
+        top: 50,
+        width: '75%',
+        height: '70%',
+        backgroundColor: '#ffffff'
+      })
       .build()
   );
 }
@@ -773,7 +897,9 @@ function _graficoEtapas(aba, linhaEtapas) {
     aba.newChart()
       .setChartType(Charts.ChartType.COLUMN)
       .addRange(rangeEtapas)
-      .setPosition(15, 6, 0, 0) // já ajustado pra nova posição
+      .setPosition(17, 6, 0, 0) // já ajustado pra nova posição
+      .setOption('width', 380)
+      .setOption('height', 220)
       .setOption('chartArea', { backgroundColor: '#ffffff' })
       .setOption('title', 'Status das Etapas')
       .setOption('legend', { position: 'none' })
@@ -786,6 +912,21 @@ function _graficoEtapas(aba, linhaEtapas) {
 .setOption('borderColor', '#ffffff')
       .setOption('width', 420)
       .setOption('height', 260)
+      .setOption('hAxis', {
+        gridlines: { color: '#e0e0e0' }
+      })
+      .setOption('vAxis', {
+        gridlines: { color: '#e0e0e0' },
+        minValue: 0
+      })
+
+      .setOption('chartArea', {
+        left: 70,
+        top: 50,
+        width: '75%',
+        height: '70%',
+        backgroundColor: '#ffffff'
+      })
       .build()
   );
 }
