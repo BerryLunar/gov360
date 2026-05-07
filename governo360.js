@@ -66,19 +66,17 @@ var A = {
  
 // --- PALETA DE CORES ---
 var COR = {
-  PRIMARIO:    '#5B2C8D', // roxo institucional
-  SECUNDARIO:  '#8E44AD', // lilás forte
-  DESTAQUE:    '#D7BDE2', // fundo de cabeçalhos secundários
-  TERCIARIO:   '#C39BD3', // lilás suave
-  ROSA:        '#E8A6B8', // rosa institucional
-  VERDE:       '#2ECC71',
-  AMARELO:     '#F4D03F',
-  VERMELHO:    '#E74C3C',
-  AZUL:        '#5DADE2',
-  CINZA_CLARO: '#F4F6F7',
+  PRIMARIO:    '#5B2C8D',
+  SECUNDARIO:  '#8E44AD',
+  DESTAQUE:    '#D7BDE2',
+  VERDE:       '#1E8449',
+  AMARELO:     '#D4AC0D',
+  VERMELHO:    '#C0392B',
+  AZUL:        '#1A5276',
+  CINZA_CLARO: '#F2F2F2',
   BRANCO:      '#FFFFFF',
-  TEXTO_ESCURO:'#2C3E50',
-  TEXTO_CLARO: '#ffffff'
+  TEXTO_CLARO: '#FFFFFF',
+  TEXTO_ESCURO:'#1A1A2E'
 };
  
 // ================================================
@@ -400,7 +398,6 @@ function atualizarDashboard() {
  
   abaDash.clearContents();
   abaDash.clearFormats();
-  abaDash.getRange(1, 1, 100, 20).setFontFamily('Calibri');
   var charts = abaDash.getCharts();
   charts.forEach(function(chart) {
   abaDash.removeChart(chart);
@@ -417,76 +414,15 @@ function atualizarDashboard() {
   }
  
   _painelResumo(abaDash, projetos);
-
-  // 🔥 pega os dados da agenda corretamente
-  var agenda = ss.getSheetByName(ABA_AGENDA).getDataRange().getValues();
-  
-  // 🔥 passa os dados pra função
-  _dadosAgenda(abaDash, agenda);
-  
+  _dadosStatusProjetos(abaDash, projetos);
   var proximaLinha = _dadosProgressoProjetos(abaDash, projetos);
   var linhaEtapas  = _dadosEtapas(abaDash, etapas, proximaLinha);
-  var abaAgenda = ss.getSheetByName(ABA_AGENDA);
-  var agenda = abaAgenda ? abaAgenda.getDataRange().getValues() : [];
-  
+ 
   _graficoStatus(abaDash);
   _graficoProgresso(abaDash, projetos);
   _graficoEtapas(abaDash, linhaEtapas);
 }
  
-// ================================================
-// CARD AGENDA (última atualização por programa)
-// ================================================
-// ================================================
-// AGENDA — Lançamentos do 360 (CORRIGIDO)
-// ================================================
-function _dadosAgenda(aba, agenda) {
-
-  aba.getRange(7, 1, 1, 4).merge()
-    .setValue('AGENDA — LANÇAMENTOS 360')
-    .setBackground(COR.SECUNDARIO)
-    .setFontColor('#ffffff')
-    .setFontWeight('bold')
-    .setHorizontalAlignment('center');
-
-  var cab = ['Programa', 'Última Atualização', 'Data Atividade', 'Lançamento'];
-  aba.getRange(8, 1, 1, 4)
-    .setValues([cab])
-    .setBackground(COR.DESTAQUE)
-    .setFontWeight('bold')
-    .setHorizontalAlignment('center');
-
-  var linha = 9;
-
-  for (var i = 1; i < agenda.length && linha <= 12; i++) {
-
-    var prog = agenda[i][A.PROGRAMA - 1];
-    var atualizacao = agenda[i][A.ATUALIZACAO - 1];
-    var atividade = agenda[i][A.DATA_ATIVIDADE - 1];
-    var lancamento = agenda[i][A.DATA_LANCAMENTO - 1];
-
-    aba.getRange(linha, 1, 1, 4).setValues([[
-      prog,
-      atualizacao,
-      atividade,
-      lancamento
-    ]]);
-
-    // fundo branco
-    aba.getRange(linha, 1, 1, 4).setBackground('#ffffff');
-
-    // 🔥 LINHAS INTERNAS (APENAS HORIZONTAIS)
-    aba.getRange(linha, 1, 1, 4)
-      .setBorder(true, null, true, null, false, false, '#e0e0e0', SpreadsheetApp.BorderStyle.SOLID);
-
-    linha++;
-  }
-
-  // 🔥 BORDA EXTERNA BRANCA GROSSA
-  aba.getRange(7, 1, 6, 4)
-    .setBorder(true, true, true, true, false, false, '#ffffff', SpreadsheetApp.BorderStyle.SOLID_THICK);
-}
-
 function _painelResumo(aba, projetos) {
   var hoje = Utilities.formatDate(
     new Date(), Session.getScriptTimeZone(), 'dd/MM/yyyy HH:mm'
@@ -510,77 +446,52 @@ function _painelResumo(aba, projetos) {
     .setFontSize(15).setFontWeight('bold')
     .setFontColor(COR.TEXTO_CLARO)
     .setBackground(COR.PRIMARIO)
-    .setFontSize(16)
-    .setFontWeight('bold')
     .setHorizontalAlignment('center')
     .setVerticalAlignment('middle');
   aba.setRowHeight(1, 36);
  
   aba.getRange(2, 1, 1, 4).merge()
     .setValue('Atualizado em: ' + hoje)
-    .setFontColor('#555555').setFontSize(12)  
+    .setFontColor('#555555').setFontSize(9)
     .setBackground(COR.CINZA_CLARO)
     .setHorizontalAlignment('center');
  
-    var cabsVisiveis = ['Total', 'Em Execução', 'Atrasados', 'Encerrados'];
-    var valsVisiveis = [total, emExecucao, atrasados, encerrados];
-    var coresLinha   = [COR.PRIMARIO, COR.AMARELO, COR.VERMELHO, COR.VERDE];
-    
-    for (var c = 0; c < cabsVisiveis.length; c++) {
-      var col = c + 1;
-    // FUNDO DO CARD
-var card = aba.getRange(3, col, 3, 1);
-card.setBackground(COR.BRANCO);
-
-// ---- BORDAS INTERNAS (#cccccc) ----
-
-// linha entre título e número
-aba.getRange(3, col)
-  .setBorder(null, null, true, null, null, null, '#e0e0e0', SpreadsheetApp.BorderStyle.SOLID);
-
-// linha entre número e barra
-aba.getRange(4, col)
-  .setBorder(null, null, true, null, null, null, '#e0e0e0', SpreadsheetApp.BorderStyle.SOLID);
-
-// ---- BORDA EXTERNA (APLICAR POR ÚLTIMO!) ----
-card.setBorder(true, true, true, true, false, false, COR.BRANCO, SpreadsheetApp.BorderStyle.SOLID_THICK);
-
-// ---- CONTEÚDO ----
-
-// TÍTULO
-aba.getRange(3, col)
-  .setValue(cabsVisiveis[c])
-  .setFontSize(12)
-  .setFontWeight('bold')
-  .setFontColor(COR.TEXTO_ESCURO)
-  .setHorizontalAlignment('center')
-  .setVerticalAlignment('middle');
-
-// NÚMERO
-aba.getRange(4, col)
-  .setValue(valsVisiveis[c])
-  .setFontSize(22)
-  .setFontWeight('bold')
-  .setFontColor(coresLinha[c])
-  .setHorizontalAlignment('center')
-  .setVerticalAlignment('middle');
-
-// BARRA INFERIOR
-aba.getRange(5, col)
-  .setBackground(coresLinha[c]);
-    }
+  var cabsVisiveis = ['Total', 'Em Execução', 'Atrasados', 'Encerrados'];
+  var valsVisiveis = [total,   emExecucao,    atrasados,   encerrados];
+  var coresVisiveis= [COR.PRIMARIO, COR.AMARELO, COR.VERMELHO, COR.VERDE];
+ 
+  for (var c = 0; c < cabsVisiveis.length; c++) {
+    var colIdx = c + 1;
+    aba.getRange(3, colIdx)
+      .setValue(cabsVisiveis[c])
+      .setFontWeight('bold').setFontSize(9)
+      .setFontColor(COR.TEXTO_CLARO)
+      .setBackground(coresVisiveis[c])
+      .setHorizontalAlignment('center');
+ 
+    aba.getRange(4, colIdx)
+      .setValue(valsVisiveis[c])
+      .setFontSize(20).setFontWeight('bold')
+      .setFontColor(coresVisiveis[c])
+      .setBackground(COR.BRANCO)
+      .setHorizontalAlignment('center');
+    aba.setRowHeight(4, 40);
+  }
+ 
+  aba.getRange(5, 1, 1, 4).merge()
+    .setValue('Planejamento: ' + planejamento + ' projeto(s)')
+    .setFontSize(9).setFontColor('#555555')
+    .setBackground(COR.CINZA_CLARO)
+    .setHorizontalAlignment('left');
  
   aba.getRange(6, 1, 1, 4).setBackground(COR.PRIMARIO);
   aba.setRowHeight(6, 4);
-  aba.setRowHeight(3, 24);
-aba.setRowHeight(4, 42);
-aba.setRowHeight(5, 6);
 }
  
 function _dadosStatusProjetos(aba, projetos) {
   aba.getRange(7, 1, 1, 2).merge()
     .setValue('STATUS DOS PROGRAMAS')
-    .setFontWeight('bold').setFontSize(12)  
+    .setFontWeight('bold').setFontSize(9)
     .setFontColor(COR.TEXTO_CLARO)
     .setBackground(COR.SECUNDARIO)
     .setHorizontalAlignment('center');
@@ -589,7 +500,7 @@ function _dadosStatusProjetos(aba, projetos) {
   for (var h = 0; h < cabCols.length; h++) {
     aba.getRange(8, h + 1)
       .setValue(cabCols[h])
-      .setFontWeight('bold').setFontSize(12)
+      .setFontWeight('bold').setFontSize(9)
       .setFontColor(COR.TEXTO_ESCURO)
       .setBackground(COR.DESTAQUE)
       .setHorizontalAlignment('center');
@@ -612,7 +523,7 @@ function _dadosStatusProjetos(aba, projetos) {
   var linha = 9;
   for (var status in cont) {
     aba.getRange(linha, 1)
-      .setValue(status).setFontSize(12)
+      .setValue(status).setFontSize(9)
       .setFontColor(coresStatus[status] || COR.TEXTO_ESCURO)
       .setBackground(COR.BRANCO).setFontWeight('bold');
     aba.getRange(linha, 2)
@@ -626,7 +537,7 @@ function _dadosStatusProjetos(aba, projetos) {
 function _dadosProgressoProjetos(aba, projetos) {
   aba.getRange(14, 1, 1, 4).merge()
     .setValue('PROGRESSO POR PROGRAMA')
-    .setFontWeight('bold').setFontSize(12)
+    .setFontWeight('bold').setFontSize(9)
     .setFontColor(COR.TEXTO_CLARO)
     .setBackground(COR.SECUNDARIO)
     .setHorizontalAlignment('center');
@@ -635,7 +546,7 @@ function _dadosProgressoProjetos(aba, projetos) {
   for (var h = 0; h < cabCols.length; h++) {
     aba.getRange(15, h + 1)
       .setValue(cabCols[h])
-      .setFontWeight('bold').setFontSize(12)
+      .setFontWeight('bold').setFontSize(9)
       .setFontColor(COR.TEXTO_ESCURO)
       .setBackground(COR.DESTAQUE)
       .setHorizontalAlignment('center');
@@ -656,14 +567,14 @@ function _dadosProgressoProjetos(aba, projetos) {
     var pTempo  = Number(proj[P.PERC_TEMPO  - 1]) || 0;
     var pGeral  = Number(proj[P.PERC_GERAL  - 1]) || 0;
  
-    aba.getRange(linha, 1).setValue(nome).setFontSize(12).setBackground(COR.BRANCO);
-    aba.getRange(linha, 2).setValue(pEtapas).setFontSize(12)
+    aba.getRange(linha, 1).setValue(nome).setFontSize(9).setBackground(COR.BRANCO);
+    aba.getRange(linha, 2).setValue(pEtapas).setFontSize(9)
       .setHorizontalAlignment('center').setBackground(COR.BRANCO)
       .setNumberFormat('0"%"');
-    aba.getRange(linha, 3).setValue(pTempo).setFontSize(12)
+    aba.getRange(linha, 3).setValue(pTempo).setFontSize(9)
       .setHorizontalAlignment('center').setBackground(COR.BRANCO)
       .setNumberFormat('0"%"');
-    aba.getRange(linha, 4).setValue(pGeral).setFontSize(12)
+    aba.getRange(linha, 4).setValue(pGeral).setFontSize(9)
       .setHorizontalAlignment('center').setBackground(COR.BRANCO)
       .setNumberFormat('0"%"');
  
@@ -679,16 +590,16 @@ function _dadosEtapas(aba, etapas, linhaInicio) {
  
   aba.getRange(LINHA_ETAPAS - 1, 1, 1, 2).merge()
     .setValue('STATUS DAS ETAPAS')
-    .setFontWeight('bold').setFontSize(12)
+    .setFontWeight('bold').setFontSize(9)
     .setFontColor(COR.TEXTO_CLARO)
     .setBackground(COR.SECUNDARIO)
     .setHorizontalAlignment('center');
  
   aba.getRange(LINHA_ETAPAS, 1).setValue('Status da Etapa')
-    .setFontWeight('bold').setFontSize(12)
+    .setFontWeight('bold').setFontSize(9)
     .setBackground(COR.DESTAQUE).setFontColor(COR.TEXTO_ESCURO);
   aba.getRange(LINHA_ETAPAS, 2).setValue('Qtd')
-    .setFontWeight('bold').setFontSize(12)
+    .setFontWeight('bold').setFontSize(9)
     .setBackground(COR.DESTAQUE).setFontColor(COR.TEXTO_ESCURO)
     .setHorizontalAlignment('center');
   _bordaBranca(aba, LINHA_ETAPAS, 1, 1, 2);
@@ -722,15 +633,15 @@ function _dadosEtapas(aba, etapas, linhaInicio) {
  
   var coresEt = {
     'Concluído':    COR.VERDE,
-    'Em andamento': COR.AZUL,
+    'Em andamento': COR.AMARELO,
     'Vencida':      COR.VERMELHO,
-    'Não iniciada': COR.TEXTO_ESCURO
+    'Não iniciada': COR.AZUL
   };
  
   var linha = LINHA_ETAPAS + 1;
   for (var s in cont) {
   if (cont[s] === 0) continue; // NÃO mostra categorias vazias
-    aba.getRange(linha, 1).setValue(s).setFontSize(12)
+    aba.getRange(linha, 1).setValue(s).setFontSize(9)
       .setFontColor(coresEt[s] || COR.TEXTO_ESCURO)
       .setFontWeight('bold').setBackground(COR.BRANCO);
     aba.getRange(linha, 2).setValue(cont[s]).setFontSize(11)
@@ -744,60 +655,131 @@ function _dadosEtapas(aba, etapas, linhaInicio) {
 }
  
 // ================================================
-// GRÁFICO STATUS (USA RESUMO DO TOPO - A4:D4)
+// CARD: PRÓXIMAS ATIVIDADES (da aba Agenda)
+// Posição: coluna 9, a partir da linha 15
 // ================================================
-function _graficoStatus(aba) {
+function _dadosProximasAtividades(aba, agenda) {
+  var COL_INICIO   = 9;
+  var LINHA_TITULO = 15;
+  var LINHA_CAB    = 16;
+  var LINHA_DADOS  = 17;
 
-  var range = aba.getRange('A3:D4'); // cabeçalho + valores reais
+  aba.getRange(LINHA_TITULO, COL_INICIO, 1, 4).merge()
+    .setValue('📅 PRÓXIMAS ATIVIDADES')
+    .setFontWeight('bold').setFontSize(12)
+    .setFontColor(COR.TEXTO_CLARO)
+    .setBackground(COR.SECUNDARIO)
+    .setHorizontalAlignment('center');
 
-  // remove antigos
-  aba.getCharts().forEach(function(chart) {
-    var pos = chart.getContainerInfo();
-    if (pos.getAnchorColumn() >= 6 && pos.getAnchorColumn() <= 8) {
-      aba.removeChart(chart);
+  var cabCols = ['Programa', 'Atividade', 'Data', 'Fonte'];
+  for (var h = 0; h < cabCols.length; h++) {
+    aba.getRange(LINHA_CAB, COL_INICIO + h)
+      .setValue(cabCols[h])
+      .setFontWeight('bold').setFontSize(11)
+      .setFontColor(COR.TEXTO_ESCURO)
+      .setBackground(COR.DESTAQUE)
+      .setHorizontalAlignment('center');
+  }
+  aba.getRange(LINHA_CAB, COL_INICIO, 1, 4)
+    .setBorder(true, true, true, true, false, false,
+               COR.BRANCO, SpreadsheetApp.BorderStyle.SOLID_THICK);
+
+  var hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+
+  var futuras = [];
+  for (var i = 1; i < agenda.length; i++) {
+    var ag = agenda[i];
+    if (!ag[A.ID_PROJETO - 1]) continue;
+    var dataAtiv = ag[A.DATA_ATIVIDADE - 1];
+    if (dataAtiv instanceof Date && !isNaN(dataAtiv)) {
+      var d = new Date(dataAtiv);
+      d.setHours(0, 0, 0, 0);
+      if (d >= hoje) {
+        futuras.push({
+          programa:  ag[A.PROGRAMA    - 1],
+          atividade: ag[A.ATUALIZACAO - 1],
+          data:      d,
+          fonte:     ag[A.FONTE       - 1]
+        });
+      }
     }
-  });
+  }
+  futuras.sort(function(a, b) { return a.data - b.data; });
 
+  var linha = LINHA_DADOS;
+
+  if (futuras.length === 0) {
+    aba.getRange(linha, COL_INICIO, 1, 4).merge()
+      .setValue('Nenhuma atividade futura cadastrada')
+      .setFontColor('#888888').setFontSize(11)
+      .setBackground(COR.BRANCO).setHorizontalAlignment('center');
+    aba.getRange(linha, COL_INICIO, 1, 4)
+      .setBorder(null, true, null, true, false, false,
+                 COR.BRANCO, SpreadsheetApp.BorderStyle.SOLID_THICK);
+    return;
+  }
+
+  for (var j = 0; j < Math.min(futuras.length, 8); j++) {
+    var item  = futuras[j];
+    var prog  = String(item.programa  || '').substring(0, 22);
+    var ativ  = String(item.atividade || '').substring(0, 30);
+    var fonte = String(item.fonte     || '');
+    var dtStr = Utilities.formatDate(item.data, Session.getScriptTimeZone(), 'dd/MM/yyyy');
+
+    aba.getRange(linha, COL_INICIO    ).setValue(prog) .setFontSize(11).setBackground(COR.BRANCO);
+    aba.getRange(linha, COL_INICIO + 1).setValue(ativ) .setFontSize(11).setBackground(COR.BRANCO);
+    aba.getRange(linha, COL_INICIO + 2).setValue(dtStr).setFontSize(11).setBackground(COR.BRANCO).setHorizontalAlignment('center');
+    aba.getRange(linha, COL_INICIO + 3).setValue(fonte).setFontSize(11).setBackground(COR.BRANCO).setHorizontalAlignment('center');
+
+    aba.getRange(linha, COL_INICIO, 1, 4)
+      .setBorder(null, null, true, null, true, null,
+                 '#e0e0e0', SpreadsheetApp.BorderStyle.SOLID);
+    aba.getRange(linha, COL_INICIO, 1, 4)
+      .setBorder(null, true, null, true, false, false,
+                 COR.BRANCO, SpreadsheetApp.BorderStyle.SOLID_THICK);
+    linha++;
+  }
+
+  // Borda inferior do card
+  aba.getRange(linha - 1, COL_INICIO, 1, 4)
+    .setBorder(null, null, true, null, false, false,
+               COR.BRANCO, SpreadsheetApp.BorderStyle.SOLID_THICK);
+}
+
+function _graficoStatus(aba) {
+  var rangeStatus = aba.getRange(8, 1, 5, 2);
+ 
   aba.insertChart(
     aba.newChart()
       .setChartType(Charts.ChartType.COLUMN)
-      .addRange(range)
-      .setPosition(3, 6, 0, 0) // F3
+      .addRange(rangeStatus)
+      .setPosition(1, 6, 0, 0)
       .setOption('title', 'Status dos Programas')
+      .setOption('titleTextStyle', { color: COR.PRIMARIO, fontSize: 12, bold: true })
       .setOption('legend', { position: 'none' })
-      .setOption('colors', [COR.AZUL])
-      .setOption('backgroundColor', '#ffffff')
-      .setOption('chartArea', {
-        backgroundColor: '#ffffff',
-        left: 60,
-        top: 40,
-        width: '80%',
-        height: '70%'
-      })
-      .setOption('hAxis', {
-        textPosition: 'out'
-      })
-      .setOption('vAxis', {
-        minValue: 0,
-        gridlines: { color: '#e0e0e0' }
-      })
-      .setOption('width', 360)
-      .setOption('height', 260)
+      .setOption('hAxis', { title: '' })
+      .setOption('vAxis', { title: 'Qtd', minValue: 0, format: '0',
+                            gridlines: { color: COR.CINZA_CLARO, count: 5 } })
+      .setOption('backgroundColor', COR.CINZA_CLARO)
+      .setOption('chartArea', { backgroundColor: COR.BRANCO,
+                                left: 50, top: 40, width: '80%', height: '70%' })
+      .setOption('width', 420).setOption('height', 260)
+      .setOption('colors', [COR.AZUL, COR.AMARELO, COR.VERMELHO, COR.VERDE])
       .build()
   );
 }
-
+ 
 function _graficoProgresso(aba, projetos) {
-
   var total = 0;
   for (var i = 1; i < projetos.length; i++) {
     if (projetos[i][P.ID - 1]) total++;
   }
   if (total === 0) return;
 
-  var nomes = aba.getRange(16, 1, total, 1);
-  var valores = aba.getRange(16, 4, total, 1);
+  var rangeGrafico = aba.getRange(16, 1, total, 4);
 
+  // Remove gráficos antigos dessa área
   aba.getCharts().forEach(function(chart) {
     var pos = chart.getContainerInfo();
     if (pos.getAnchorColumn() >= 9) {
@@ -808,38 +790,28 @@ function _graficoProgresso(aba, projetos) {
   aba.insertChart(
     aba.newChart()
       .setChartType(Charts.ChartType.BAR)
-      .addRange(nomes)
-      .addRange(valores)
-      .setPosition(3, 9, 0, 0) // I3
+      .addRange(rangeGrafico)
+      .setPosition(1, 9, 0, 0) // ← COMEÇA NA COLUNA J (9)
       .setOption('title', 'Progresso por Programa (%)')
-      .setOption('legend', { position: 'none' })
-      .setOption('colors', [COR.PRIMARIO])
-      .setOption('backgroundColor', '#ffffff')
-      .setOption('chartArea', {
-        backgroundColor: '#ffffff',
-        left: 120,
-        top: 40,
-        width: '75%',
-        height: '75%'
-      })
-      .setOption('hAxis', {
-        minValue: 0,
-        maxValue: 100,
-        gridlines: { color: '#e0e0e0' }
-      })
-      .setOption('width', 620)
-      .setOption('height', 420)
+      .setOption('legend', { position: 'top' })
+      .setOption('hAxis', { minValue: 0, maxValue: 100 })
+      .setOption('width', 520)
+      .setOption('height', 320)
+      .setOption('colors', [COR.SECUNDARIO, COR.AZUL, COR.PRIMARIO])
       .build()
   );
 }
  
 function _graficoEtapas(aba, linhaEtapas) {
+  // Cabeçalho está em linhaEtapas
+  // Dados reais começam na linha seguinte
+  var rangeEtapas = aba.getRange(linhaEtapas + 1, 1, 4, 2);
 
-  var range = aba.getRange(linhaEtapas + 1, 1, 4, 2);
-
-  aba.getCharts().forEach(function(chart) {
+  // Remove gráficos antigos dessa área (evita duplicação bugada)
+  var charts = aba.getCharts();
+  charts.forEach(function(chart) {
     var pos = chart.getContainerInfo();
-    if (pos.getAnchorColumn() >= 6 && pos.getAnchorRow() >= 16) {
+    if (pos.getAnchorColumn() === 6 && pos.getAnchorRow() >= 14) {
       aba.removeChart(chart);
     }
   });
@@ -847,29 +819,17 @@ function _graficoEtapas(aba, linhaEtapas) {
   aba.insertChart(
     aba.newChart()
       .setChartType(Charts.ChartType.COLUMN)
-      .addRange(range)
-      .setPosition(16, 6, 0, 0) // F16
+      .addRange(rangeEtapas)
+      .setPosition(14, 6, 0, 0)
       .setOption('title', 'Status das Etapas')
       .setOption('legend', { position: 'none' })
-      .setOption('colors', [COR.TERCIARIO])
-      .setOption('backgroundColor', '#ffffff')
-      .setOption('chartArea', {
-        backgroundColor: '#ffffff',
-        left: 60,
-        top: 40,
-        width: '80%',
-        height: '70%'
-      })
-      .setOption('vAxis', {
-        minValue: 0,
-        gridlines: { color: '#e0e0e0' }
-      })
-      .setOption('width', 360)
+      .setOption('vAxis', { minValue: 0 })
+      .setOption('width', 420)
       .setOption('height', 260)
       .build()
   );
 }
-
+ 
 // ================================================
 // HELPER: bordas brancas
 // ================================================
